@@ -1,95 +1,115 @@
-// Claire Lindstrom CMSC350: Contains the methods to convert prefix to postfix and postfix to prefix.
-
+// Claire Lindstrom CMSC350: Contains converter class which has conversion methods for postfix and prefix and the reverse
 package conversion;
 
-import java.util.Stack;
+import exceptions.SyntaxError; // import exceptions.SyntaxError; to catch SyntaxError and display message
+import java.util.Stack; // import java.util.Stack; to use Stack
 
 public class Converter {
 
     /**
-     * This method takes e a prefix expression and turn it into its postfix .
+     * This method takes a prefix expression and turns it into its postfix
+     * equivalent.
      * 
      * @param prefixExpression - The prefix math expression we're starting with.
      * @return The converted postfix expression.
+     * @throws SyntaxError if the conversion encounters an error.
      */
-    public static String convertPrefixToPostfix(String prefixExpression) {
-        // This stack reverses the order of tokens
+    public static String convertPrefixToPostfix(String prefixExpression) throws SyntaxError {
+        // this stack to reverse the order of tokens.
         Stack<String> tokenReversalStack = new Stack<>();
-
-        // building our postfix expression using this stack
+        // This stack builds postfix expression.
         Stack<String> intermediateResultsStack = new Stack<>();
 
-        // breaks them into individual tokens
-        String[] tokens = prefixExpression.split("");
+        // Splitting the expression into individual tokens.
+        String[] tokens = prefixExpression.split("\\s+");
 
-        // Looping through tokens and pushing non-space ones onto our reversal stack
+        // Pushing tokens to the reversal stack, but skipping spaces.
         for (String currentToken : tokens) {
             if (!currentToken.equals(" ")) {
                 tokenReversalStack.push(currentToken);
             }
         }
 
-        // while statement that takes off the reversal stack and builds the postfix
-        // expression.
+        // conversion process.
         while (!tokenReversalStack.isEmpty()) {
             String extractedToken = tokenReversalStack.pop();
 
-            // If it's a number (or operand), just push it onto our results stack.
+            // If it's an operand, pushes it to the results stack.
             if (isOperand(extractedToken)) {
                 intermediateResultsStack.push(extractedToken);
             } else {
-                // If it's an operator, we pop two operands, combine them with the operator, and
-                // push back.
+                // If it's an operator, we need two operands to work with.
+                if (intermediateResultsStack.size() < 2) {
+                    throw new SyntaxError("Incorrect format.");
+                }
+                // Pop two operands, combine them with the operator, and push back to the stack.
                 String firstOperand = intermediateResultsStack.pop();
                 String secondOperand = intermediateResultsStack.pop();
-                String combinedExpression = firstOperand + secondOperand + extractedToken;
+                String combinedExpression = firstOperand + " " + secondOperand + " " + extractedToken;
                 intermediateResultsStack.push(combinedExpression);
             }
         }
+        // If there's more than one item left in the stack throw error
+        if (intermediateResultsStack.size() != 1) {
+            throw new SyntaxError("Looks like the expression's format is off.");
+        }
 
-        // Returns the postfix expression.
+        // pop the final postfix expression and return it.
         return intermediateResultsStack.pop();
+
     }
 
     /**
-     * This method takes a postfix expression and converts it to prefix.
+     * this method takes a postfix expression and turning it into prefix.
      * 
-     * @param postfixExpression - The postfix math expression we're starting with.
-     * @return The converted prefix expression.
+     * @param postfixExpression - the postfix math expression we're starting with
+     * @return the new and shiny prefix expression
+     * @throws SyntaxError if things don't go as planned during the conversion
      */
-    public static String convertPostfixToPrefix(String postfixExpression) {
-        // This stack will help us build the prefix expression.
+    public static String convertPostfixToPrefix(String postfixExpression) throws SyntaxError {
+        // This stack will build the prefix expression.
         Stack<String> intermediateResultsStack = new Stack<>();
 
-        // Breaking the expression into individual tokens.
-        String[] tokens = postfixExpression.split("");
+        // Splitting the expression into individual tokens.
+        String[] tokens = postfixExpression.split("\\s+");
 
-        // Looping through tokens to build our prefix expression.
+        // Looping through tokens to start the conversion.
         for (String currentToken : tokens) {
+            // If it's an operand, push it to the stack.
             if (isOperand(currentToken)) {
                 intermediateResultsStack.push(currentToken);
             } else {
-                // For operators, we pop two operands, combine them with the operator at the
-                // front, and push back.
-                String secondOperand = intermediateResultsStack.pop();
+                // If it's an operator, we need two operands to work with.
+                if (intermediateResultsStack.size() < 2) {
+                    throw new SyntaxError("Looks like the expression's format is off.");
+                }
+                // Pop two operands, combine them with the operator in prefix style, and push
+                // back to the stack.
                 String firstOperand = intermediateResultsStack.pop();
-                String combinedExpression = currentToken + firstOperand + secondOperand;
+                String secondOperand = intermediateResultsStack.pop();
+                String combinedExpression = currentToken + " " + firstOperand + " " + secondOperand;
                 intermediateResultsStack.push(combinedExpression);
             }
         }
 
-        // prefix expression is ready.
+        // If there's more than one item left in the stack, throw error
+        if (intermediateResultsStack.size() != 1) {
+            throw new SyntaxError("Looks like the expression's format is off.");
+        }
+
+        // pop the final prefix expression and return it.
         return intermediateResultsStack.pop();
     }
 
     /**
-     * method to check if a token is an operand or an operator.
+     * Quick check: is the token an operand or an operator?
      * 
-     * @param token - The token we're checking.
-     * @return True if it's an operand, false otherwise.
+     * @param token - the token we're checking
+     * @return true if it's an operand, false otherwise
      */
     public static boolean isOperand(String token) {
-        // If it's not one of the basic operators, we assume it's an operand.
+        // If it's one of these operators, it's not an operand.
         return !("+".equals(token) || "-".equals(token) || "*".equals(token) || "/".equals(token));
     }
+
 }
